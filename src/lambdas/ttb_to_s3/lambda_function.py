@@ -30,8 +30,9 @@ PAGEABLE_REQUEST = {
     'waitListable': False
 }
 
-# just in case...
 HEADERS = {
+    'Accept': 'application/json',
+    # just in case...
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
 
@@ -73,7 +74,6 @@ class TTBCourse(TypedDict):
     sections: list[Section]
     sessions: list[Session]
 
-# str is
 HTSLCourse = dict[TeachMethod, dict[SectionName, list[MeetingTime]]]
 
 def get_courses() -> list[TTBCourse]:
@@ -91,7 +91,7 @@ def get_courses() -> list[TTBCourse]:
         'sessions': all_sessions,
     })
     r.raise_for_status()
-    return r.json()['payload']['pageableCourse']['courses']['courses']
+    return r.json()['payload']['pageableCourse']['courses']
 
 def construct_data(courses: list[TTBCourse]) -> dict[Session, dict[str, HTSLCourse]]:
     result: dict[Session, dict[str, HTSLCourse]] = {}
@@ -103,7 +103,7 @@ def construct_data(courses: list[TTBCourse]) -> dict[Session, dict[str, HTSLCour
             item.setdefault(section['teachMethod'], {})[section['name']] = section['meetingTimes']
         # a course in multiple sessions goes in multiple lists
         for session in course['sessions']:
-            result[session][course_code] = item
+            result.setdefault(session, {})[course_code] = item
     return result
 
 def lambda_handler(event: events.EventBridgeEvent, context: ctx.Context) -> None:
@@ -112,5 +112,12 @@ def lambda_handler(event: events.EventBridgeEvent, context: ctx.Context) -> None
     bucket = boto3.resource("s3").Bucket(BUCKET_NAME)
     for session, data in result.items():
         filename = f'{session}.json'
+        if event is None:
+            with open(filename, 'w') as f:
+                json.dump(data, f, ensure_ascii=True, indent='\t')
+            continue
         blob: bytes = json.dumps(data, ensure_ascii=True, separators=(',', ':')).encode('ascii')
         bucket.put_object(Key=filename, Body=blob)
+
+if __name__ == '__main__':
+    lambda_handler(None, None) # type: ignore
