@@ -90,5 +90,8 @@ def lambda_handler(event: events.APIGatewayProxyEventV2, context: ctx.Context) -
             works[code] = course
     return {
         'statusCode': 200,
-        'body': json.dumps(sorted(works))
+        'body': json.dumps(sorted(works)),
+        'headers': {
+            'Access-Control-Allow-Origin': '*'
+        }
     }

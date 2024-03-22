@@ -30,7 +30,7 @@ const updateOverlayCourses = () => {
 
   // Send the data to the server
   fetch(
-    "https://jidt27fibxg2kamhwhimogwda40jtlup.lambda-url.us-east-1.on.aws/CourseFitter",
+    "https://eeityel2m3.execute-api.us-east-1.amazonaws.com/CourseFitter",
     {
       method: "POST",
       body: JSON.stringify(state),
