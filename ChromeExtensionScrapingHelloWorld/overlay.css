@@ -1,0 +1,36 @@
+.extensionOverlayContent {
+    padding: 1em;
+    width: 20em;
+    height: 20em;
+    z-index: 2000;
+    transition: all 0.5s;
+}
+
+.extensionOverlaycontainer {
+    position: fixed;
+    top: 1em;
+    left: 1em;
+    width: 3em;
+    height: 3em;
+    background-color: rgba(0, 125, 179, 0.778);
+    border-radius: 50%;
+    z-index: 1000;
+    transition: all 0.5s;
+    overflow: hidden;
+}
+
+.extensionOverlaycontainer > div {
+    opacity: 0;
+}
+
+.extensionOverlaycontainer:hover {
+    background-color: rgba(0, 125, 179, 1);
+    height: 20em;
+    width: 20em;
+    border-radius: 1em;
+}
+
+.extensionOverlaycontainer:hover > div {
+    opacity: 100;
+
+}
