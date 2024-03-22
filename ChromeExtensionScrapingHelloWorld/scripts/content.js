@@ -16,6 +16,25 @@ const updateOverlayCourses = () => {
     courseElement.innerText = course;
     overlayBody.appendChild(courseElement);
   });
+
+  // Send the data to the server
+  fetch(
+    "https://jidt27fibxg2kamhwhimogwda40jtlup.lambda-url.us-east-1.on.aws/CourseFitter",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(state),
+    }
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Success:", data);
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
 };
 
 const updateCourses = () => {
@@ -75,7 +94,12 @@ const observer = new MutationObserver(async () => {
       Array.from(sessionPills).forEach((sessionPill) => {
         const sessionName =
           sessionPill.getElementsByTagName("span")[0].innerText;
-        sessions.push(sessionName);
+
+        const sessionYear = sessionName.match(/(\d+)/);
+
+        console.log(sessionYear);
+
+        if (sessionName.toLowerCase()) sessions.push(sessionName);
       });
 
       state.sessions = sessions;
