@@ -100,9 +100,11 @@ def construct_data(courses: list[TTBCourse]) -> dict[Session, dict[str, HTSLCour
         item: HTSLCourse = {}
         # populate LEC: LEC0101: meetingTimes
         for section in course['sections']:
-            item.setdefault(section['teachMethod'], {})[section['name']] = section['meetingTimes']
+            # some courses don't have teachMethod; use first three letters of section name
+            teachMethod: TeachMethod = section.get('teachMethod', section['name'][:3])
+            item.setdefault(teachMethod, {})[section['name']] = section['meetingTimes']
         # a course in multiple sessions goes in multiple lists
-        for session in course['sessions']:
+        for session in course.get('sessions', []):
             result.setdefault(session, {})[course_code] = item
     return result
 
