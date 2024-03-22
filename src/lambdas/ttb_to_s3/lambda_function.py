@@ -1,5 +1,8 @@
 import json
+import os
+from tempfile import TemporaryDirectory
 from typing import Literal, NewType, TypedDict
+from zipfile import ZipFile
 import boto3
 import requests
 from aws_lambda_typing import events, context as ctx
@@ -29,6 +32,8 @@ PAGEABLE_REQUEST = {
     'timePreferences': [],
     'waitListable': False
 }
+
+ICPR_GITHUB = "https://github.com/ICPRplshelp/UofT-Timetable-Prototype-V2/archive/refs/heads/gh-pages.zip"
 
 HEADERS = {
     'Accept': 'application/json',
@@ -76,7 +81,7 @@ class TTBCourse(TypedDict):
 
 HTSLCourse = dict[TeachMethod, dict[SectionName, list[MeetingTime]]]
 
-def get_courses() -> list[TTBCourse]:
+def _get_courses() -> list[TTBCourse]:
     r = requests.get(REFERENCE_DATA, headers=HEADERS)
     r.raise_for_status()
     reference_data = r.json()['payload']
@@ -92,6 +97,29 @@ def get_courses() -> list[TTBCourse]:
     })
     r.raise_for_status()
     return r.json()['payload']['pageableCourse']['courses']
+
+def get_courses() -> list[TTBCourse]:
+    with TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+        # download zip file
+        path = os.path.join(tmpdir, 'archive.zip')
+        with open(path, 'wb') as zipfile:
+            for chunk in requests.get(ICPR_GITHUB, stream=True).iter_content():
+                zipfile.write(chunk)
+        # extract into temp directory
+        zipfile = ZipFile(path)
+        zipfile.extractall(tmpdir)
+        path = os.path.join(tmpdir, 'UofT-Timetable-Prototype-V2-gh-pages', 'api')
+        # loop over every session and department
+        courses: list[TTBCourse] = []
+        for session in os.listdir(path):
+            if not session.isdigit():
+                continue # not a valid session code
+            session_path = os.path.join(path, session)
+            for department in os.listdir(session_path):
+                with open(os.path.join(session_path, department)) as f:
+                    data = json.load(f)
+                courses.extend(data['courses'])
+    return courses
 
 def construct_data(courses: list[TTBCourse]) -> dict[Session, dict[str, HTSLCourse]]:
     result: dict[Session, dict[str, HTSLCourse]] = {}
