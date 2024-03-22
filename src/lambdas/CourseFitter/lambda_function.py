@@ -46,14 +46,18 @@ class TTBCourse(TypedDict):
 HTSLCourse = dict[TeachMethod, dict[SectionName, list[MeetingTime]]]
 
 def conflict(a: MeetingTime, b: MeetingTime) -> bool:
-    c_s = (a['start']['day'], a['start']['millisofday'])
-    c_e = (a['end']['day'], a['end']['millisofday'])
-    d_s = (b['start']['day'], b['start']['millisofday'])
-    d_e = (b['end']['day'], b['end']['millisofday'])
-    return (c_s < d_e and c_e > d_s) or (d_s < c_e and d_e > c_s)
+    if a['start']['day'] != b['start']['day']:
+        return False
+    c_s = a['start']['millisofday']
+    c_e = a['end']['millisofday']
+    d_s = b['start']['millisofday']
+    d_e = b['end']['millisofday']
+    return (c_s < d_e and c_e > d_s)
 
 def fits(existing: list[tuple[str, SectionName]], code: str, new: HTSLCourse, others: dict[str, HTSLCourse]) -> bool:
     existing_times = [meetingTime for course, section in existing for meetingTime in others[course][cast(TeachMethod, section[:3])][section]]
+    if code == 'ANT357H1S':
+        print(existing, existing_times, code, new, sep='\n')
     for sections in new.values():
         new_times = []
         for meetingTimes in sections.values():
@@ -61,7 +65,8 @@ def fits(existing: list[tuple[str, SectionName]], code: str, new: HTSLCourse, ot
                 for meetingTime in meetingTimes:
                     new_times.append(meetingTime)
             except TypeError:
-                print('ignoring None in', code)
+                # print('ignoring None in', code)
+                return False
         # new_times = [meetingTime for meetingTimes in sections.values() for meetingTime in meetingTimes]
         if all(any(conflict(existing, new_time) for existing in existing_times) for new_time in new_times):
             return False # at least one teaching method conflicts for all its sections with any existing time
