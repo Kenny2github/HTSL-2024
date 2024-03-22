@@ -1,4 +1,8 @@
 boto3
 boto3-stubs
+mypy-boto3-apigateway
+mypy-boto3-events
+mypy-boto3-lambda
+mypy-boto3-s3
 aws-lambda-typing
 requests
