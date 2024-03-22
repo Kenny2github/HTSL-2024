@@ -50,7 +50,7 @@ def conflict(a: MeetingTime, b: MeetingTime) -> bool:
     c_e = (a['end']['day'], a['end']['millisofday'])
     d_s = (b['start']['day'], b['start']['millisofday'])
     d_e = (b['end']['day'], b['end']['millisofday'])
-    return (c_s < d_e and c_e < d_s) or (d_s < c_e and d_e < c_s)
+    return (c_s < d_e and c_e > d_s) or (d_s < c_e and d_e > c_s)
 
 def fits(existing: list[tuple[str, SectionName]], code: str, new: HTSLCourse, others: dict[str, HTSLCourse]) -> bool:
     existing_times = [meetingTime for course, section in existing for meetingTime in others[course][cast(TeachMethod, section[:3])][section]]
