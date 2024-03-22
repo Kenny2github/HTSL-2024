@@ -134,6 +134,7 @@ def construct_data(courses: list[TTBCourse]) -> dict[Session, dict[str, HTSLCour
         # a course in multiple sessions goes in multiple lists
         for session in course.get('sessions', []):
             result.setdefault(session, {})[course_code] = item
+        print('Constructed', course_code)
     return result
 
 def lambda_handler(event: events.EventBridgeEvent, context: ctx.Context) -> None:
