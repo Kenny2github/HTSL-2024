@@ -4,6 +4,7 @@
     height: 20em;
     z-index: 2000;
     transition: all 0.5s;
+    color: white;
 }
 
 .extensionOverlaycontainer {

@@ -1,7 +1,16 @@
 const state = {
-  foundCalendar: false,
   courses: [],
   sessions: [],
+};
+
+let coursesToShow = [];
+
+const app_state = {
+  loading: false,
+};
+
+const setLoading = (loading) => {
+  app_state.loading = loading;
 };
 
 root = document.getElementsByTagName("app-root")[0];
@@ -11,30 +20,38 @@ const updateOverlayCourses = () => {
     "extensionOverlayBody"
   )[0];
   overlayBody.innerHTML = "";
-  state.courses.forEach((course) => {
+  coursesToShow.forEach((course) => {
     const courseElement = document.createElement("div");
     courseElement.innerText = course;
     overlayBody.appendChild(courseElement);
   });
+
+  if (app_state.loading) return;
 
   // Send the data to the server
   fetch(
     "https://jidt27fibxg2kamhwhimogwda40jtlup.lambda-url.us-east-1.on.aws/CourseFitter",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(state),
     }
   )
     .then((response) => response.json())
     .then((data) => {
       console.log("Success:", data);
+      setLoading(false);
+
+      coursesToShow = data.slice(0, 5);
+      console.log(coursesToShow);
+      updateOverlayCourses();
     })
     .catch((error) => {
       console.error("Error:", error);
+
+      setLoading(false);
     });
+
+  setLoading(true);
 };
 
 const updateCourses = () => {
@@ -63,13 +80,13 @@ const updateCourses = () => {
 
       if (!addedCourses.includes(courseInfo) && courseControls) {
         addedCourses.push(courseInfo);
-        updateOverlayCourses();
       }
     }
   });
   if (addedCourses.length !== state.courses.length) {
     state.courses = addedCourses;
-    console.log(state);
+    console.log(state.courses);
+    updateOverlayCourses();
   }
 };
 
@@ -80,7 +97,6 @@ const observer = new MutationObserver(async () => {
 
   if (calendar) {
     console.log("calendar found");
-    state.foundCalendar = true;
     observer.disconnect();
 
     sessions = [];
@@ -97,9 +113,16 @@ const observer = new MutationObserver(async () => {
 
         const sessionYear = sessionName.match(/(\d+)/);
 
-        console.log(sessionYear);
+        if (sessionYear.index > 10) return;
 
-        if (sessionName.toLowerCase()) sessions.push(sessionName);
+        let sessionString = undefined;
+
+        if (sessionName.includes("Fall")) {
+          sessionString = sessionYear[0].toString().concat("9");
+        } else if (sessionName.includes("Winter")) {
+          sessionString = sessionYear[0].toString().concat("1");
+        }
+        sessions.push(sessionString);
       });
 
       state.sessions = sessions;
